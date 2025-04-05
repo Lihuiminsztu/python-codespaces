@@ -333,9 +333,26 @@ def save_record(params, results):
     
     print(f"Test record saved to: {filepath}")
     return filepath
+import sys
+import os
+import json
+import argparse
+import datetime
+from ase.constraints import FixAtoms
+from ase.visualize import view
+from ase.build import molecule
+import numpy as np
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+from source.BuildIhSpecial import buildIhSpecial
+from source.absorption import find_absorption_site, place_molecule_on_slab
+from source.calculate import optimazation, calculate
+
+# [... Keep existing functions get_next_record_number() and save_record() unchanged ...]
 
 def run_simulation(miller_indices, plane_size, temperature, site_type, atom_indices, 
-                   distance, calculator, record=True):
+                   distance, calculator, orientation='vertical', angle=0.0, 
+                   facing_atom=0, invert=False, record=True):
     """
     Run a complete adsorption simulation with the specified parameters
     
@@ -355,6 +372,14 @@ def run_simulation(miller_indices, plane_size, temperature, site_type, atom_indi
         Initial adsorption distance in Å
     calculator : str
         Calculator to use ('GFN1-xTB', 'GFN2-xTB')
+    orientation : str
+        Orientation of the molecule ('vertical', 'horizontal', 'tilted')
+    angle : float
+        Rotation angle in degrees (for 'horizontal' or 'tilted' orientations)
+    facing_atom : int
+        Index of the atom in the molecule that should face the surface
+    invert : bool
+        Whether to invert the molecular orientation
     record : bool
         Whether to record results to the log file
         
@@ -374,7 +399,11 @@ def run_simulation(miller_indices, plane_size, temperature, site_type, atom_indi
         "site_type": site_type,
         "atom_indices": atom_indices,
         "distance": distance,
-        "calculator": calculator
+        "calculator": calculator,
+        "orientation": orientation,
+        "angle": angle,
+        "facing_atom": facing_atom,
+        "invert": invert
     }
     
     print(f"Starting simulation with parameters: {params}")
@@ -389,13 +418,27 @@ def run_simulation(miller_indices, plane_size, temperature, site_type, atom_indi
         # Find adsorption site with specified parameters
         pos = find_absorption_site(Ih1, site_type=site_type, atom_indices=atom_indices, distance=distance)
         
-        # Place molecule on slab
-        complexsystem = place_molecule_on_slab(Ih1, co, pos)
+        # Place molecule on slab with the enhanced orientation options
+        complexsystem = place_molecule_on_slab(
+            Ih1, co, pos,
+            orientation=orientation,
+            angle=angle,
+            facing_atom=facing_atom,
+            invert=invert
+        )
         
         # Create output directory for this run
         indices_str = f"{miller_indices[0]}{miller_indices[1]}{miller_indices[2]}"
         plane_str = f"{plane_size[0]}x{plane_size[1]}x{plane_size[2]}"
-        run_id = f"Ih{indices_str}_{plane_str}_{site_type}_d{distance}_{calculator}"
+        orientation_str = f"{orientation}"
+        if orientation != 'vertical':
+            orientation_str += f"_{angle}deg"
+        if facing_atom != 0 or invert:
+            orientation_str += f"_face{facing_atom}"
+            if invert:
+                orientation_str += "_inv"
+                
+        run_id = f"Ih{indices_str}_{plane_str}_{site_type}_d{distance}_{orientation_str}_{calculator}"
         out_dir = f"/home/lihuimin/projects/BEofSpecialMoleculeOnIh/CO/out/{run_id}"
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
@@ -412,7 +455,7 @@ def run_simulation(miller_indices, plane_size, temperature, site_type, atom_indi
         write(os.path.join(out_dir, "optimized.cif"), complexsystem)
         
         # Calculate binding energy
-        BE = calculate(co, Ih1, complexsystem, calculator=calculator,electronic_temperature=temperature)
+        BE = calculate(co, Ih1, complexsystem, calculator=calculator, electronic_temperature=temperature)
         
         success = True
         
@@ -513,6 +556,20 @@ def main():
                         choices=['GFN1-xTB', 'GFN2-xTB'],
                         help='Calculator to use (default: GFN2-xTB)')
     
+    # Add new orientation parameters
+    parser.add_argument('--orient', type=str, default='vertical',
+                        choices=['vertical', 'horizontal', 'tilted'],
+                        help='Molecule orientation (default: vertical)')
+    
+    parser.add_argument('--angle', type=float, default=0.0,
+                        help='Rotation angle in degrees for non-vertical orientations (default: 0.0)')
+    
+    parser.add_argument('--face', type=int, default=0,
+                        help='Index of atom facing the surface (default: 0 = first atom)')
+    
+    parser.add_argument('--invert', action='store_true',
+                        help='Invert the molecular orientation')
+    
     parser.add_argument('--no-log', action='store_true',
                         help='Disable saving to the combined log file')
     
@@ -543,8 +600,13 @@ def main():
         atom_indices=atom_indices,
         distance=args.dist,
         calculator=args.calc,
+        orientation=args.orient,
+        angle=args.angle,
+        facing_atom=args.face,
+        invert=args.invert,
         record=not args.no_log,
     )
 
 if __name__ == "__main__":
     main()
+

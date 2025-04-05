@@ -7,7 +7,9 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from source.BuildIhSpecial import buildIhSpecial
 
-# version 1 def
+# version 1 def-find_absorption_site
+#day 2025-3-29
+
 # def find_absorption_site(slab, site_type='ontop', atom_index=0):
 #     '''Find the absorption site of CO on Ih 001 surface.
     
@@ -105,9 +107,11 @@ from source.BuildIhSpecial import buildIhSpecial
 #         raise ValueError(f'Invalid site_type: {site_type}')
     
 def find_absorption_site(slab, site_type='ontop', atom_indices=None,distance=2.8):
-    '''Find the absorption site of CO on Ih 001 surface.
+    '''
+    Find the absorption site of CO on Ih 001 surface.
     
     Parameters:
+    ----------
     slab: Atoms
         The Ih(001) slab.
     site_type: str
@@ -121,7 +125,6 @@ def find_absorption_site(slab, site_type='ontop', atom_indices=None,distance=2.8
         Initial distance from molecule to absorted surface
 
     Returns:
-    position: ndarray
         The (x, y, z) coordinates of the absorption site.
     '''
     # Get the layer oxygen atoms
@@ -282,8 +285,156 @@ def find_absorption_site(slab, site_type='ontop', atom_indices=None,distance=2.8
     
     else:
         raise ValueError(f'Invalid site_type: {site_type}')
-def place_molecule_on_slab(slab,molecule,position):
-    '''Place a molecule at a specific position on the slab
+    
+# version 1 def-place_molecule_on_slab
+# day 2025-4-5
+
+
+# def place_molecule_on_slab(slab,molecule,position):
+#     '''Place a molecule at a specific position on the slab
+    
+#     Parameters:
+#     ----------
+#     slab: Atoms
+#         The surface slab
+#     molecule: Atoms
+#         The molecule to place on the slab
+#     position: array-like
+#         The position for the molecule's first atom
+    
+#     Returns:
+#     ----------
+#     Combined: Atoms object
+#         The combined system with molecule on slab
+#     '''
+#     #Create a copy of the molecule
+#     molecule = molecule.copy()
+#     #Calculate the displacement vector
+#     disp = position - molecule.positions[0]
+#     #Move the molecule
+#     molecule.translate(disp)
+#     #Combine the slab and the molecule
+#     combined = slab + molecule
+#     # Write the combined structure
+#     out = "/home/lihuimin/projects/BEofSpecialMoleculeOnIh/CO/out"
+#     write(os.path.join(out,'combined.cif'), combined)
+#     return combined
+
+
+# version 2 def-place_molecule_on_slab
+# day 2025-4-5
+# ----------------------------------
+# def place_molecule_on_slab(slab, molecule, position, orientation='vertical', angle=0.0):
+#     '''Place a molecule at a specific position on the slab with controlled orientation
+    
+#     Parameters:
+#     ----------
+#     slab: Atoms
+#         The surface slab
+#     molecule: Atoms
+#         The molecule to place on the slab
+#     position: array-like
+#         The position for the molecule's first atom
+#     orientation: str
+#         Orientation of the molecule: 'vertical' (default), 'horizontal', or 'tilted'
+#     angle: float
+#         Rotation angle in degrees (for 'horizontal' or 'tilted' orientations)
+#         For 'horizontal': rotation around vertical axis
+#         For 'tilted': tilt angle from vertical position
+    
+#     Returns:
+#     ----------
+#     Combined: object.
+#         The combined system with molecule on slab in specified orientation
+#     '''
+#     # Create a copy of the molecule
+#     molecule = molecule.copy()
+    
+#     # Get the molecular axis (for a diatomic like CO, the axis connecting the atoms)
+#     if len(molecule) == 2:
+#         # For diatomic molecules, axis is simply the vector from atom 0 to atom 1
+#         molecular_axis = molecule.positions[1] - molecule.positions[0]
+#         molecular_axis = molecular_axis / np.linalg.norm(molecular_axis)  # Normalize
+#     else:
+#         # For other molecules, use principal axis (simplified implementation)
+#         # This is a simplified approach - more complex molecules might need different logic
+#         centroid = molecule.get_center_of_mass()
+#         vectors = molecule.positions - centroid
+#         # Use the first atom as reference for the axis
+#         molecular_axis = molecule.positions[0] - centroid
+#         molecular_axis = molecular_axis / np.linalg.norm(molecular_axis)  # Normalize
+    
+#     # Apply orientation
+#     if orientation == 'vertical':
+#         # Default orientation - molecule's axis aligned with z-axis (vertical)
+#         # For CO, carbon down (towards surface) and oxygen up
+#         z_axis = np.array([0, 0, 1])
+#         # Determine if we need to flip the molecule (CO should have C pointing down)
+#         if molecule.symbols[0] == 'C' and molecule.symbols[1] == 'O':
+#             # CO is already in correct orientation (C first, O second)
+#             pass
+#         elif molecule.symbols[0] == 'O' and molecule.symbols[1] == 'C':
+#             # Need to rotate 180 degrees to get C pointing down
+#             molecule.rotate(180, 'x')
+        
+#         # Align with z-axis
+#         rotation_axis = np.cross(molecular_axis, z_axis)
+#         if np.linalg.norm(rotation_axis) > 1e-6:  # Check if cross product is not zero
+#             rotation_angle = np.arccos(np.dot(molecular_axis, z_axis))
+#             molecule.rotate(np.degrees(rotation_angle), rotation_axis)
+    
+#     elif orientation == 'horizontal':
+#         # Molecule's axis parallel to surface (perpendicular to z-axis)
+#         # First align with x-axis
+#         x_axis = np.array([1, 0, 0])
+#         rotation_axis = np.cross(molecular_axis, x_axis)
+#         if np.linalg.norm(rotation_axis) > 1e-6:
+#             rotation_angle = np.arccos(np.dot(molecular_axis, x_axis))
+#             molecule.rotate(np.degrees(rotation_angle), rotation_axis)
+        
+#         # Then apply any additional rotation around z-axis
+#         if angle != 0:
+#             molecule.rotate(angle, 'z')
+    
+#     elif orientation == 'tilted':
+#         # Molecule's axis tilted at specified angle from vertical
+#         # First make it vertical
+#         z_axis = np.array([0, 0, 1])
+#         rotation_axis = np.cross(molecular_axis, z_axis)
+#         if np.linalg.norm(rotation_axis) > 1e-6:
+#             rotation_angle = np.arccos(np.dot(molecular_axis, z_axis))
+#             molecule.rotate(np.degrees(rotation_angle), rotation_axis)
+        
+#         # Then tilt by specified angle
+#         # Choose x-axis as default tilt direction
+#         tilt_axis = np.array([1, 0, 0])
+#         molecule.rotate(angle, tilt_axis)
+    
+#     else:
+#         raise ValueError(f"Unknown orientation: {orientation}. Use 'vertical', 'horizontal', or 'tilted'")
+    
+#     # Calculate the displacement vector to position first atom
+#     disp = position - molecule.positions[0]
+    
+#     # Move the molecule
+#     molecule.translate(disp)
+    
+#     # Combine the slab and the molecule
+#     combined = slab + molecule
+    
+#     # Write the combined structure
+#     out = "/home/lihuimin/projects/BEofSpecialMoleculeOnIh/CO/out"
+#     write(os.path.join(out, 'combined.cif'), combined)
+    
+#     print(f"Placed molecule with '{orientation}' orientation" + 
+#           (f" and {angle}° angle" if orientation != 'vertical' else ""))
+    
+#     return combined
+
+
+def place_molecule_on_slab(slab, molecule, position, orientation='vertical', angle=0.0, 
+                           facing_atom=0, invert=False):
+    '''Place a molecule at a specific position on the slab with controlled orientation
     
     Parameters:
     ----------
@@ -293,21 +444,124 @@ def place_molecule_on_slab(slab,molecule,position):
         The molecule to place on the slab
     position: array-like
         The position for the molecule's first atom
+    orientation: str
+        Orientation of the molecule: 'vertical' (default), 'horizontal', or 'tilted'
+    angle: float
+        Rotation angle in degrees (for 'horizontal' or 'tilted' orientations)
+        For 'horizontal': rotation around vertical axis
+        For 'tilted': tilt angle from vertical position
+    facing_atom: int
+        Index of the atom in the molecule that should face the surface (default: 0)
+    invert: bool
+        If True, inverts the molecule orientation (useful for non-diatomic molecules)
     
     Returns:
     ----------
     Combined: Atoms object
-        The combined system with molecule on slab
+        The combined system with molecule on slab in specified orientation
     '''
-    #Create a copy of the molecule
+    # Create a copy of the molecule
     molecule = molecule.copy()
-    #Calculate the displacement vector
-    disp = position - molecule.positions[0]
-    #Move the molecule
+    
+    # For diatomic molecules like CO, set up the molecular axis
+    if len(molecule) == 2:
+        # Check if we need to reorder atoms based on facing_atom
+        if facing_atom == 1 and not invert:
+            # We want the second atom to face the surface
+            # Swap atom positions for easier handling
+            temp_pos = molecule.positions[0].copy()
+            molecule.positions[0] = molecule.positions[1].copy()
+            molecule.positions[1] = temp_pos
+            # Swap chemical symbols too
+            molecule.symbols[0], molecule.symbols[1] = molecule.symbols[1], molecule.symbols[0]
+            # Reset facing_atom to 0 since we've reordered
+            facing_atom = 0
+        
+        # Get molecular axis
+        if facing_atom == 0:
+            molecular_axis = molecule.positions[1] - molecule.positions[0]
+        else:
+            molecular_axis = molecule.positions[0] - molecule.positions[1]
+        
+        molecular_axis = molecular_axis / np.linalg.norm(molecular_axis)  # Normalize
+    
+    else:
+        # For larger molecules, calculate axis from center of mass to the facing atom
+        centroid = molecule.get_center_of_mass()
+        
+        # Direction from center to facing atom
+        if facing_atom < len(molecule):
+            molecular_axis = molecule.positions[facing_atom] - centroid
+        else:
+            print(f"Warning: facing_atom {facing_atom} out of range. Using atom 0.")
+            molecular_axis = molecule.positions[0] - centroid
+            
+        molecular_axis = molecular_axis / np.linalg.norm(molecular_axis)  # Normalize
+    
+    # Apply inversion if requested
+    if invert:
+        molecular_axis = -molecular_axis
+    
+    # Apply orientation
+    if orientation == 'vertical':
+        # Align molecular axis with negative z-axis (pointing towards surface)
+        z_axis = np.array([0, 0, -1])  # Negative z points towards surface
+        
+        # Align with z-axis
+        rotation_axis = np.cross(molecular_axis, z_axis)
+        
+        if np.linalg.norm(rotation_axis) > 1e-6:  # Check if cross product is not zero
+            rotation_angle = np.arccos(np.dot(molecular_axis, z_axis))
+            molecule.rotate(np.degrees(rotation_angle), rotation_axis)
+    
+    elif orientation == 'horizontal':
+        # Molecule's axis parallel to surface (perpendicular to z-axis)
+        # First align with x-axis
+        x_axis = np.array([1, 0, 0])
+        rotation_axis = np.cross(molecular_axis, x_axis)
+        
+        if np.linalg.norm(rotation_axis) > 1e-6:
+            rotation_angle = np.arccos(np.dot(molecular_axis, x_axis))
+            molecule.rotate(np.degrees(rotation_angle), rotation_axis)
+        
+        # Then apply any additional rotation around z-axis
+        if angle != 0:
+            molecule.rotate(angle, 'z')
+    
+    elif orientation == 'tilted':
+        # First align with negative z-axis
+        z_axis = np.array([0, 0, -1])
+        rotation_axis = np.cross(molecular_axis, z_axis)
+        
+        if np.linalg.norm(rotation_axis) > 1e-6:
+            rotation_angle = np.arccos(np.dot(molecular_axis, z_axis))
+            molecule.rotate(np.degrees(rotation_angle), rotation_axis)
+        
+        # Then tilt by specified angle
+        # Choose x-axis as default tilt direction
+        tilt_axis = np.array([1, 0, 0])
+        molecule.rotate(angle, tilt_axis)
+    
+    else:
+        raise ValueError(f"Unknown orientation: {orientation}. Use 'vertical', 'horizontal', or 'tilted'")
+    
+    # Calculate the displacement vector to position the facing atom
+    disp = position - molecule.positions[facing_atom]
+    
+    # Move the molecule
     molecule.translate(disp)
-    #Combine the slab and the molecule
+    
+    # Combine the slab and the molecule
     combined = slab + molecule
+    
     # Write the combined structure
     out = "/home/lihuimin/projects/BEofSpecialMoleculeOnIh/CO/out"
-    write(os.path.join(out,'combined.cif'), combined)
+    write(os.path.join(out, 'combined.cif'), combined)
+    
+    # Print summary of molecule placement
+    facing_atom_symbol = molecule.symbols[facing_atom]
+    print(f"Placed molecule with '{orientation}' orientation, {facing_atom_symbol} atom facing surface" + 
+          (f" and {angle}° angle" if orientation != 'vertical' else "") +
+          (", inverted" if invert else ""))
+    
     return combined
