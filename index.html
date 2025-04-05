@@ -1,0 +1,36 @@
+---
+layout: default
+title: "Computational Chemistry Learning Journey"
+---
+
+<div class="home">
+  <h1>欢迎来到我的计算化学学习之旅</h1>
+  
+  <p>这个博客主要记录我在冰面吸附模拟和Python科学计算领域的学习进展。</p>
+
+  <h2>最新文章</h2>
+  <ul class="post-list">
+    {% for post in site.posts %}
+      <li>
+        <span class="post-meta">{{ post.date | date: "%Y-%m-%d" }}</span>
+        <h3>
+          <a class="post-link" href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a>
+        </h3>
+        {% if post.description %}
+          <p>{{ post.description }}</p>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+
+  <p class="rss-subscribe">通过 <a href="{{ "/feed.xml" | prepend: site.baseurl }}">RSS</a> 订阅</p>
+
+  <h2>分类</h2>
+  <ul class="category-list">
+    {% for category in site.categories %}
+      <li>
+        <a href="{{ site.baseurl }}/categories/#{{ category[0] | slugize }}">{{ category[0] }}</a> ({{ category[1].size }})
+      </li>
+    {% endfor %}
+  </ul>
+</div>
