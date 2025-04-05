@@ -1,0 +1,13 @@
+title: "Computational Chemistry Learning Journey"
+description: "Documenting my progress in ice surface adsorption simulations and Python scientific computing"
+author: "Lihuimin"
+theme: jekyll-theme-minimal
+markdown: kramdown
+permalink: /:year/:month/:day/:title/
+
+# Social links
+github_username: Lihuiminzszu
+
+# Additional settings
+show_downloads: true
+google_analytics: G-8RPH0BS9K2
