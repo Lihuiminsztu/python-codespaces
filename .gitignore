@@ -1,7 +1,45 @@
+# Jekyll 生成的文件
 _site/
 .sass-cache/
 .jekyll-cache/
 .jekyll-metadata
+.jekyll-cache
+
+# Ruby 相关文件
 Gemfile.lock
 vendor/
 .bundle/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# IDE 和编辑器文件
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Python 相关文件（如果你在同一仓库中有Python代码）
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
