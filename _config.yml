@@ -11,3 +11,7 @@ github_username: Lihuiminzszu
 # Additional settings
 show_downloads: true
 google_analytics: G-8RPH0BS9K2
+
+# GitHub Pages configuration
+baseurl: "/python-codespaces"
+url: "https://lihuiminsztu.github.io"
