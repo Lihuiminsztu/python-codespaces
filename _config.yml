@@ -15,3 +15,8 @@ google_analytics: G-8RPH0BS9K2
 # GitHub Pages configuration
 baseurl: "/python-codespaces"
 url: "https://lihuiminsztu.github.io"
+
+# Start jekyll configuration
+# plugins:
+#   - jekyll-feed
+
